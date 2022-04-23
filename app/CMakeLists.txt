@@ -2,6 +2,7 @@
 include(wmtk_data)
 
 option(WMTK_APP_TETWILD ON)
+option(WMTK_APP_ADAMESH ON)
 option(WMTK_APP_HARMTET ON)
 option(WMTK_APP_UNIFORM_REMESH ON)
 option(WMTK_APP_SEC ON)
@@ -10,6 +11,10 @@ option(WMTK_APP_UNIT_TESTS ON)
 
 if (WMTK_APP_TETWILD)
 add_subdirectory(tetwild)
+endif()
+
+if (WMTK_APP_ADAMESH)
+add_subdirectory(adamesh)
 endif()
 
 if (WMTK_APP_HARMTET)
