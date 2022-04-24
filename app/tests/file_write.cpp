@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include <TetWild.h>
+#include <tetwild/TetWild.h>
 
 #include <wmtk/TetMesh.h>
-#include <common.h>
+#include <tetwild/common.h>
 
 using namespace wmtk;
 using namespace tetwild;

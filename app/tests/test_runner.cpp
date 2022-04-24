@@ -1,4 +1,4 @@
-#include <TetWild.h>
+#include <tetwild/TetWild.h>
 
 #include <wmtk/TetMesh.h>
 

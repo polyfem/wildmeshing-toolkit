@@ -1,5 +1,5 @@
-#include <TetWild.h>
-#include <common.h>
+#include <tetwild/TetWild.h>
+#include <tetwild/common.h>
 #include <wmtk/TetMesh.h>
 #include <catch2/catch.hpp>
 #include "spdlog/spdlog.h"

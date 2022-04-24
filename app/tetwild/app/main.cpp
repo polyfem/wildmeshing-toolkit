@@ -1,4 +1,4 @@
-#include <TetWild.h>
+#include <tetwild/TetWild.h>
 #include <igl/write_triangle_mesh.h>
 #include <wmtk/TetMesh.h>
 #include <wmtk/utils/Partitioning.h>
@@ -7,7 +7,7 @@
 #include "wmtk/utils/InsertTriangleUtils.hpp"
 
 //#include <catch2/catch.hpp>
-#include "Parameters.h"
+#include "tetwild/Parameters.h"
 #include "spdlog/common.h"
 
 #include <igl/Timer.h>

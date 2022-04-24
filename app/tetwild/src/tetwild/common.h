@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <Eigen/Core>
-#include <Rational.hpp>
+#include <tetwild/Rational.hpp>
 
 namespace tetwild {
 

@@ -1,5 +1,5 @@
-#include <TetWild.h>
-#include <common.h>
+#include <tetwild/TetWild.h>
+#include <tetwild/common.h>
 #include <wmtk/TetMesh.h>
 
 #include <igl/read_triangle_mesh.h>
