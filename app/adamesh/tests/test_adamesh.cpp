@@ -1,5 +1,8 @@
+#include <cassert>
 #include <catch2/catch.hpp>
 
-TEST_CASE("ok", "[test_remeshing][.]")
+#include "TetWild.h"
+TEST_CASE("ok", "[adamesh]")
 {
+	assert(true);
 }
