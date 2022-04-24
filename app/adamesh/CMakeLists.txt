@@ -1,11 +1,12 @@
 
 file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS
-"*.cpp"
-"*.hpp"
+"src/*.cpp"
+"src/*.hpp"
 )
 
 add_library(wmtk_adamesh "${LIB_SOURCES}")
-# target_include_directories(wmtk_adamesh PUBLIC )
+
+add_library(wmtk::adamesh ALIAS wmtk_adamesh)
 
 target_link_libraries(wmtk_adamesh PUBLIC
 	wmtk::toolkit
