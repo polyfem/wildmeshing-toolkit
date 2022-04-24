@@ -25,7 +25,7 @@ add_library(wmtk_tetwild
 )
 add_library(wmtk::tetwild ALIAS wmtk_tetwild)
 
-target_include_directories(wmtk_tetwild PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tetwild)
+target_include_directories(wmtk_tetwild PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
 
 target_link_libraries(wmtk_tetwild PUBLIC
 	Tracy::TracyClient
