@@ -340,13 +340,13 @@ void AdaMesh::insert_all_points(const std::vector<Eigen::Vector3d>& points)
                               const Vector3d& pt) -> int {
         auto it = split_maps.find(tid);
         if (it == split_maps.end()) { // leaf
-            auto vs = m.oriented_tet_vertices(m.tuple_from_tet(tid));
+            auto vs = m.oriented_tet_vids(m.tuple_from_tet(tid));
             if (::prism::predicates::point_in_tetrahedron(
                     pt,
-                    tetv[vs[0].vid(m)].m_posf,
-                    tetv[vs[1].vid(m)].m_posf,
-                    tetv[vs[2].vid(m)].m_posf,
-                    tetv[vs[3].vid(m)].m_posf))
+                    tetv[vs[0]].m_posf,
+                    tetv[vs[1]].m_posf,
+                    tetv[vs[2]].m_posf,
+                    tetv[vs[3]].m_posf))
                 return tid;
         } else {
             for (auto v : it->second) {
@@ -374,6 +374,7 @@ void AdaMesh::insert_all_points(const std::vector<Eigen::Vector3d>& points)
         wmtk::logger().trace("insert {} with config {}", i, config);
 
         std::vector<Tuple> new_tets;
+
         if (config[0] != -1) {
             if (config[1] == -1) { // point degenerate
                 // vertex
