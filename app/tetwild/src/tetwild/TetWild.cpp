@@ -78,8 +78,6 @@ void tetwild::TetWild::mesh_improvement(int max_its)
         pre_avg_energy = avg_energy;
     }
 
-    const auto& vs = get_vertices();
-    for (auto& v : vs) m_vertex_attribute[v.vid(*this)].m_scalar = 1;
     wmtk::logger().info("========it post========");
     local_operations({{0, 1, 0, 0}});
 }

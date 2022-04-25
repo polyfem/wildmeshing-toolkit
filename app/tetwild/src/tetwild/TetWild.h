@@ -35,7 +35,6 @@ public:
     bool m_is_outside = false;
 
     Scalar m_sizing_scalar = 1;
-    Scalar m_scalar = 1;
     bool m_is_freezed = false;
 
     size_t partition_id = 0;
@@ -49,25 +48,19 @@ public:
 class FaceAttributes
 {
 public:
-    Scalar tag;
-
     bool m_is_surface_fs = false; // 0; 1
     int m_is_bbox_fs = -1; //-1; 0~5
-
-    int m_surface_tags = -1;
 
     void reset()
     {
         m_is_surface_fs = false;
         m_is_bbox_fs = -1;
-        m_surface_tags = -1;
     }
 
     void merge(const FaceAttributes& attr)
     {
         m_is_surface_fs = m_is_surface_fs || attr.m_is_surface_fs;
         if (attr.m_is_bbox_fs >= 0) m_is_bbox_fs = attr.m_is_bbox_fs;
-        m_surface_tags = std::max(m_surface_tags, attr.m_surface_tags);
     }
 };
 
@@ -75,7 +68,6 @@ class TetAttributes
 {
 public:
     Scalar m_quality;
-    Scalar m_scalar;
     bool m_is_outside;
 };
 

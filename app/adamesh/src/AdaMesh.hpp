@@ -25,8 +25,7 @@ public:
         const RowMatd& V,
         const RowMati& T); // initialize topology and attrs
     void insert_all_points(
-        const std::vector<Vector3d>& points,
-        const std::vector<int>& hint_tid); // insert points
+        const std::vector<Vector3d>& points); // insert points
     void insert_all_triangles(const std::vector<std::array<size_t, 3>>& tris);
 
 public: // callbacks

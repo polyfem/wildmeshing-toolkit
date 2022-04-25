@@ -60,4 +60,6 @@ TEST_CASE("insertion", "[adamesh]")
     mesh.init_from_input_surface(vertices, faces, partition_id);
 
     REQUIRE(mesh.check_attributes());
+
+    mesh.insert_all_points(vertices);
 }

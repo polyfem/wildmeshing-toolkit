@@ -1,11 +1,14 @@
 #include "AdaMesh.hpp"
 
+#include <cassert>
 #include <wmtk/TetMeshOperations.hpp>
 #include "prism/geogram/AABB.hpp"
 #include "prism/geogram/AABB_tet.hpp"
 #include "prism/predicates/inside_prism_tetra.hpp"
 #include "tetwild/TetWild.h"
 #include "wmtk/ConcurrentTetMesh.h"
+#include "wmtk/TetMesh.h"
+#include "wmtk/utils/Logger.hpp"
 
 #include <geogram/numerics/predicates.h>
 
@@ -78,10 +81,9 @@ AdaMesh::AdaMesh(
     }
 }
 
-AdaMesh::AdaMesh(tetwild::Parameters& params,
-    fastEnvelope::FastEnvelope& envelope):
-tetwild::TetWild(params, envelope) {
-}
+AdaMesh::AdaMesh(tetwild::Parameters& params, fastEnvelope::FastEnvelope& envelope)
+    : tetwild::TetWild(params, envelope)
+{}
 
 
 struct DivideTet : public TetMesh::OperationBuilder
@@ -152,13 +154,48 @@ struct SplitFace : public TetMesh::OperationBuilder
     }
 };
 
-void AdaMesh::insert_all_points(
-    const std::vector<Eigen::Vector3d>& points,
-    const std::vector<int>& hint_tid)
+auto aabb_tree_tid(AdaMesh& m, const std::vector<Eigen::Vector3d>& points)
 {
-    if (hint_tid.empty()) { // find hint
-        auto tree = prism::geogram::AABB_tet(tetV, tetT);
+    using RowMatd = Eigen::Matrix<double, -1, -1, Eigen::RowMajor>;
+    using RowMati = Eigen::Matrix<int, -1, -1, Eigen::RowMajor>;
+
+    RowMatd V = RowMatd::Zero(m.vert_capacity(), 3);
+    m.for_each_vertex([&](auto& v) {
+        auto i = v.vid(m);
+        assert(m.m_vertex_attribute[i].m_is_rounded);
+        V.row(i) = m.m_vertex_attribute[i].m_posf;
+    });
+
+    std::vector<std::array<size_t, 4>> tets;
+    static_cast<wmtk::TetMesh>(m).for_each_tetra(
+        [&](auto& t) { tets.push_back(m.oriented_tet_vids(t)); });
+
+
+    RowMati T = RowMati(tets.size(), 4);
+    for (auto i = 0; i < tets.size(); i++)
+        for (auto j = 0; j < 4; j++) T(i, j) = tets[i][j];
+
+    auto tree = prism::geogram::AABB_tet(V, T);
+
+    std::vector<int> hint_tids;
+    for (auto p : points) {
+        auto [tid, bc] = tree.point_query(p);
+        if (tid < 0) {
+            wmtk::logger().critical("Outside, need expansion.");
+            assert(false);
+        }
+        hint_tids.push_back(tid);
     }
+    return hint_tids;
+};
+
+void AdaMesh::insert_all_points(
+    const std::vector<Eigen::Vector3d>& points)
+{
+    std::vector<int> new_vid(points.size());
+
+    auto hint_tid = aabb_tree_tid(*this, points);
+    
     std::function<int(size_t, const Vector3d&)> find_containing_tet;
     std::map<int, std::set<int>> split_maps;
     auto& m = *this;
@@ -184,8 +221,15 @@ void AdaMesh::insert_all_points(
         return -1;
     };
 
-
-    std::vector<int> new_vid(points.size());
+    ///
+    /// Duplicate points: nothing, keep vid
+    /// Split Edge: Tet Quality same. 
+    ////   Face Perserve taggings same as tetwild::edge-splits. 
+    ///    Vertex Same.
+    /// Split Face: Tet Quality easy. Face tagging: inherit directly. Vertex Tagging, only if it is face
+    /// Divide Tet: Face Tagging: all internal, but keep previously. Vertex Tagging, no new tag.
+    /// TODO: understand bbox_faces.
+    ///
     for (auto i = 0; i < points.size(); i++) {
         auto pt = points[i];
         auto tid = find_containing_tet(hint_tid[i], pt); // the final tid
