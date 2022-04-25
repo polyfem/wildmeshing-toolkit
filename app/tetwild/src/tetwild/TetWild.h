@@ -170,8 +170,8 @@ public:
     double get_quality(const Tuple& loc) const;
     bool round(const Tuple& loc);
     //
-    bool is_edge_on_surface(const Tuple& loc);
-    bool is_edge_on_bbox(const Tuple& loc);
+    bool is_edge_on_surface(const Tuple& loc) const;
+    bool is_edge_on_bbox(const Tuple& loc) const;
     //
     bool adjust_sizing_field(double max_energy);
     void mesh_improvement(int max_its = 80);
@@ -210,16 +210,7 @@ private:
 
     ////// Operations
 
-    struct SplitInfoCache
-    {
-        //        VertexAttributes vertex_info;
-        size_t v1_id;
-        size_t v2_id;
-        bool is_edge_on_surface = false;
 
-        std::vector<std::pair<FaceAttributes, std::array<size_t, 3>>> changed_faces;
-    };
-    tbb::enumerable_thread_specific<SplitInfoCache> split_cache;
 
     struct CollapseInfoCache
     {

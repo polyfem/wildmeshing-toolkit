@@ -509,7 +509,7 @@ std::vector<std::array<size_t, 3>> tetwild::TetWild::get_faces_by_condition(
     return res;
 }
 
-bool tetwild::TetWild::is_edge_on_surface(const Tuple& loc)
+bool tetwild::TetWild::is_edge_on_surface(const Tuple& loc) const
 {
     size_t v1_id = loc.vid(*this);
     auto loc1 = loc.switch_vertex(*this);
@@ -537,7 +537,7 @@ bool tetwild::TetWild::is_edge_on_surface(const Tuple& loc)
 }
 
 
-bool tetwild::TetWild::is_edge_on_bbox(const Tuple& loc)
+bool tetwild::TetWild::is_edge_on_bbox(const Tuple& loc) const
 {
     size_t v1_id = loc.vid(*this);
     auto loc1 = loc.switch_vertex(*this);
