@@ -223,6 +223,8 @@ bool adamesh::SplitFace::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
     for (auto& loc : locs) {
         m_app.m_tet_attribute[loc.tid(m)].m_quality = m_app.get_quality(loc);
     }
+
+    return true;
 }
 
 
@@ -258,39 +260,36 @@ bool adamesh::DivideTet::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
     for (auto& loc : locs) {
         m_app.m_tet_attribute[loc.tid(m)].m_quality = m_app.get_quality(loc);
     }
+
+    return true;
 }
 
 
 namespace wmtk {
-AdaMesh::AdaMesh(
-    tetwild::Parameters& params,
-    fastEnvelope::FastEnvelope& envelope,
-    const RowMatd& V,
-    const RowMati& T)
-    : tetwild::TetWild(params, envelope)
-{
-    // TODO: manually set tags.
-    assert(false);
-    assert(false);
-    m_vertex_attribute.resize(V.rows());
-    tet_attrs.resize(T.rows());
+// AdaMesh::AdaMesh(
+//     tetwild::Parameters& params,
+//     fastEnvelope::FastEnvelope& envelope,
+//     const RowMatd& V,
+//     const RowMati& T)
+//     : tetwild::TetWild(params, envelope)
+// {
+//     // TODO: manually set tags.
+//     assert(false);
+//     assert(false);
+//     m_vertex_attribute.resize(V.rows());
+//     tet_attrs.resize(T.rows());
 
-    std::vector<std::array<size_t, 4>> tets(T.rows());
-    for (auto i = 0; i < tets.size(); i++) {
-        for (auto j = 0; j < 4; j++) tets[i][j] = (size_t)T(i, j);
-    }
-    init(V.rows(), tets);
+//     std::vector<std::array<size_t, 4>> tets(T.rows());
+//     for (auto i = 0; i < tets.size(); i++) {
+//         for (auto j = 0; j < 4; j++) tets[i][j] = (size_t)T(i, j);
+//     }
+//     init(V.rows(), tets);
 
-    // attrs
-    for (auto i = 0; i < V.rows(); i++) {
-        m_vertex_attribute[i] = tetwild::VertexAttributes(Vector3d(V(i, 0), V(i, 1), V(i, 2)));
-    }
-}
-
-AdaMesh::AdaMesh(tetwild::Parameters& params, fastEnvelope::FastEnvelope& envelope)
-    : tetwild::TetWild(params, envelope)
-{}
-
+//     // attrs
+//     for (auto i = 0; i < V.rows(); i++) {
+//         m_vertex_attribute[i] = tetwild::VertexAttributes(Vector3d(V(i, 0), V(i, 1), V(i, 2)));
+//     }
+// }
 
 auto aabb_tree_tid(AdaMesh& m, const std::vector<Eigen::Vector3d>& points)
 {
@@ -325,7 +324,7 @@ auto aabb_tree_tid(AdaMesh& m, const std::vector<Eigen::Vector3d>& points)
         hint_tids.push_back(tid);
     }
     return hint_tids;
-};
+}
 
 void AdaMesh::insert_all_points(const std::vector<Eigen::Vector3d>& points)
 {

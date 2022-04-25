@@ -18,14 +18,11 @@ using Eigen::Vector3d;
 struct AdaMesh : public tetwild::TetWild
 {
 public:
-    AdaMesh(tetwild::Parameters& params, fastEnvelope::FastEnvelope& envelope);
-    AdaMesh(
-        tetwild::Parameters& params,
-        fastEnvelope::FastEnvelope& m_envelope,
-        const RowMatd& V,
-        const RowMati& T); // initialize topology and attrs
-    void insert_all_points(
-        const std::vector<Vector3d>& points); // insert points
+    AdaMesh(tetwild::Parameters& params, fastEnvelope::FastEnvelope& envelope)
+        : tetwild::TetWild(params, envelope, 1)
+    {}
+    
+    void insert_all_points(const std::vector<Vector3d>& points); // insert points
     void insert_all_triangles(const std::vector<std::array<size_t, 3>>& tris);
 
 public: // callbacks

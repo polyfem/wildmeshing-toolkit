@@ -2,7 +2,7 @@
 #include <cassert>
 #include <catch2/catch.hpp>
 
-#include "src/AdaMesh.hpp"
+#include "AdaMesh.hpp"
 #include "tetwild/TetWild.h"
 #include "wmtk/utils/InsertTriangleUtils.hpp"
 
