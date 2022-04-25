@@ -1,10 +1,11 @@
 #pragma once
 
-#include <tbb/concurrent_map.h>
 #include <wmtk/ConcurrentTetMesh.h>
 #include <wmtk/utils/PartitionMesh.h>
+#include <wmtk/TetMeshOperations.hpp>
 #include "Parameters.h"
 #include "common.h"
+#include "wmtk/TetMesh.h"
 
 // clang-format off
 #include <wmtk/utils/DisableWarnings.hpp>
@@ -18,7 +19,6 @@
 #include <wmtk/utils/EnableWarnings.hpp>
 // clang-format on
 
-#include <wmtk/utils/PartitionMesh.h>
 #include <memory>
 
 namespace tetwild {
@@ -131,8 +131,7 @@ public:
 
     void init_from_delaunay_box_mesh(const std::vector<Eigen::Vector3d>& vertices);
 
-    void finalize_triangle_insertion(
-        const std::vector<std::array<size_t, 3>>& faces);
+    void finalize_triangle_insertion(const std::vector<std::array<size_t, 3>>& faces);
 
     void init_from_input_surface(
         const std::vector<Vector3d>& vertices,
@@ -143,8 +142,6 @@ public:
 
 public:
     void split_all_edges();
-    bool split_edge_before(const Tuple& t) override;
-    bool split_edge_after(const Tuple& loc) override;
 
     void smooth_all_vertices();
     bool smooth_before(const Tuple& t) override;
@@ -211,7 +208,6 @@ private:
     ////// Operations
 
 
-
     struct CollapseInfoCache
     {
         size_t v1_id;
@@ -237,4 +233,22 @@ private:
     tbb::enumerable_thread_specific<SwapInfoCache> swap_cache;
 };
 
+struct SplitEdge : public ::wmtk::SplitEdge
+{
+    struct SplitInfoCache
+    {
+        size_t v1_id;
+        size_t v2_id;
+        bool is_edge_on_surface = false;
+
+        std::vector<std::pair<FaceAttributes, std::array<size_t, 3>>> changed_faces;
+    } split_cache;
+
+    tetwild::TetWild& m_app;
+    SplitEdge(tetwild::TetWild& m_)
+        : wmtk::SplitEdge(m_)
+        , m_app(m_){};
+    bool before(const wmtk::TetMesh::Tuple&);
+    bool after(const std::vector<wmtk::TetMesh::Tuple>&);
+};
 } // namespace tetwild

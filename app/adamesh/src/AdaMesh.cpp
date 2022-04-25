@@ -247,7 +247,7 @@ void AdaMesh::insert_all_points(
             } else if (config[2] == -1) {
                 // edge
                 auto tup = m.tuple_from_edge({(size_t)config[0], (size_t)config[1]});
-                auto spl_edge = wmtk::SplitEdge(m);
+                auto spl_edge = tetwild::SplitEdge(m);
                 auto suc = m.customized_operation(spl_edge, tup, new_tets);
 
                 for (auto j = 0; j < spl_edge.affected.size();
