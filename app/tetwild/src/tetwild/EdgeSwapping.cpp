@@ -83,6 +83,14 @@ void tetwild::TetWild::swap_all_edges()
     time = timer.getElapsedTime();
     wmtk::logger().info("edge swap prepare time: {}s", time);
     auto setup_and_execute = [&](auto& executor) {
+        executor.edit_operation_maps["edge_swap"] =
+            [](auto& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
+            std::vector<Tuple> ret;
+            if (m.swap_edge(t, ret))
+                return ret;
+            else
+                return {};
+        };
         executor.renew_neighbor_tuples = wmtk::renewal_edges;
         executor.priority = [&](auto& m, auto op, auto& t) { return m.get_length2(t); };
         executor.num_threads = NUM_THREADS;
@@ -116,6 +124,14 @@ void tetwild::TetWild::swap_all_faces()
     time = timer.getElapsedTime();
     wmtk::logger().info("face swap prepare time: {}s", time);
     auto setup_and_execute = [&](auto& executor) {
+        executor.edit_operation_maps["face_swap"] =
+            [](auto& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
+            std::vector<Tuple> ret;
+            if (m.swap_face(t, ret))
+                return ret;
+            else
+                return {};
+        };
         executor.renew_neighbor_tuples = wmtk::renewal_faces;
         executor.priority = [](auto& m, auto op, auto& t) { return m.get_length2(t); };
         executor.num_threads = NUM_THREADS;
@@ -243,6 +259,14 @@ void tetwild::TetWild::swap_all_edges_44()
     time = timer.getElapsedTime();
     wmtk::logger().info("edge swap 44 prepare time: {}s", time);
     auto setup_and_execute = [&](auto& executor) {
+        executor.edit_operation_maps["edge_swap_44"] =
+            [](auto& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
+            std::vector<Tuple> ret;
+            if (m.swap_edge_44(t, ret))
+                return ret;
+            else
+                return {};
+        };
         executor.renew_neighbor_tuples = wmtk::renewal_edges;
         executor.priority = [&](auto& m, auto op, auto& t) { return m.get_length2(t); };
         executor.num_threads = NUM_THREADS;

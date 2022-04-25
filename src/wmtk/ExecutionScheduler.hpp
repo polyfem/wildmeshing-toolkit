@@ -91,57 +91,10 @@ struct ExecutePass
 
     ExecutePass()
     {
-        if constexpr (std::is_base_of<wmtk::TetMesh, AppMesh>::value) {
-            edit_operation_maps = {
-                {"edge_collapse",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     std::vector<Tuple> ret;
-                     if (m.collapse_edge(t, ret))
-                         return ret;
-                     else
-                         return {};
-                 }},
-                {"edge_swap",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     std::vector<Tuple> ret;
-                     if (m.swap_edge(t, ret))
-                         return ret;
-                     else
-                         return {};
-                 }},
-                {"edge_swap_44",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     std::vector<Tuple> ret;
-                     if (m.swap_edge_44(t, ret))
-                         return ret;
-                     else
-                         return {};
-                 }},
-                {"edge_split",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     std::vector<Tuple> ret;
-                     if (m.split_edge(t, ret))
-                         return ret;
-                     else
-                         return {};
-                 }},
-                {"face_swap",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     std::vector<Tuple> ret;
-                     if (m.swap_face(t, ret))
-                         return ret;
-                     else
-                         return {};
-                 }},
-                {"vertex_smooth",
-                 [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
-                     if (m.smooth_vertex(t))
-                         return std::vector<Tuple>{};
-                     else
-                         return {};
-                 }}};
+        if constexpr (std::is_base_of_v<wmtk::TetMesh, AppMesh>) {
+            edit_operation_maps = {};
         }
-        if constexpr (std::is_base_of<wmtk::TriMesh, AppMesh>::value) {
+        if constexpr (std::is_base_of_v<wmtk::TriMesh, AppMesh>) {
             edit_operation_maps = {
                 {"edge_collapse",
                  [](AppMesh& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {

@@ -3,12 +3,11 @@
 #include "wmtk/ExecutionScheduler.hpp"
 
 #include <Eigen/src/Core/util/Constants.h>
+#include <igl/Timer.h>
 #include <wmtk/utils/AMIPS.h>
 #include <array>
 #include <wmtk/utils/Logger.hpp>
 #include <wmtk/utils/TetraQualityUtils.hpp>
-#include <igl/Timer.h>
-
 
 
 #include <limits>
@@ -20,7 +19,6 @@ bool tetwild::TetWild::smooth_before(const Tuple& t)
     // try to round.
     return round(t); // Note: no need to roll back.
 }
-
 
 
 bool tetwild::TetWild::smooth_after(const Tuple& t)
@@ -117,7 +115,6 @@ void tetwild::TetWild::smooth_all_vertices()
     igl::Timer timer;
     double time;
     timer.start();
-    auto executor = wmtk::ExecutePass<tetwild::TetWild>();
     auto collect_all_ops = std::vector<std::pair<std::string, Tuple>>();
     for (auto& loc : get_vertices()) {
         collect_all_ops.emplace_back("vertex_smooth", loc);
@@ -125,19 +122,29 @@ void tetwild::TetWild::smooth_all_vertices()
     time = timer.getElapsedTime();
     wmtk::logger().info("vertex smoothing prepare time: {}s", time);
     wmtk::logger().debug("Num verts {}", collect_all_ops.size());
+    auto smoother = [](auto& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
+        if (m.smooth_vertex(t))
+            return std::vector<Tuple>{};
+        else
+            return {};
+    };
     if (NUM_THREADS > 0) {
         timer.start();
         auto executor = wmtk::ExecutePass<TetWild, wmtk::ExecutionPolicy::kPartition>();
         executor.lock_vertices = [](auto& m, const auto& e, int task_id) -> bool {
             return m.try_set_vertex_mutex_one_ring(e, task_id);
         };
+        executor.edit_operation_maps["vertex_smooth"] = smoother;
         executor.num_threads = NUM_THREADS;
+
         executor(*this, collect_all_ops);
         time = timer.getElapsedTime();
         wmtk::logger().info("vertex smoothing operation time parallel: {}s", time);
     } else {
         timer.start();
         auto executor = wmtk::ExecutePass<TetWild, wmtk::ExecutionPolicy::kSeq>();
+        executor.edit_operation_maps["vertex_smooth"] = smoother;
+
         executor(*this, collect_all_ops);
         time = timer.getElapsedTime();
         wmtk::logger().info("vertex smoothing operation time serial: {}s", time);

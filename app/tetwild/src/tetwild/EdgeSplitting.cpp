@@ -1,9 +1,9 @@
 #include "TetWild.h"
 
+#include <igl/Timer.h>
 #include <wmtk/ExecutionScheduler.hpp>
 #include <wmtk/utils/ExecutorUtils.hpp>
 #include <wmtk/utils/Logger.hpp>
-#include <igl/Timer.h>
 
 void tetwild::TetWild::split_all_edges()
 {
@@ -15,12 +15,20 @@ void tetwild::TetWild::split_all_edges()
     time = timer.getElapsedTime();
     wmtk::logger().info("edge split prepare time: {}s", time);
     auto setup_and_execute = [&](auto& executor) {
+        executor.edit_operation_maps["edge_split"] =
+            [](auto& m, const Tuple& t) -> std::optional<std::vector<Tuple>> {
+            std::vector<Tuple> ret;
+            if (m.split_edge(t, ret))
+                return ret;
+            else
+                return {};
+        };
         executor.renew_neighbor_tuples = wmtk::renewal_simple;
 
-        executor.priority = [&](auto &m, auto op, auto &t) { return m.get_length2(t); };
+        executor.priority = [&](auto& m, auto op, auto& t) { return m.get_length2(t); };
         executor.num_threads = NUM_THREADS;
-        executor.should_process = [&](const auto &m, const auto &ele) {
-            auto[weight, op, tup] = ele;
+        executor.should_process = [&](const auto& m, const auto& ele) {
+            auto [weight, op, tup] = ele;
             auto length = m.get_length2(tup);
             if (length != weight) return false;
             //
@@ -29,8 +37,7 @@ void tetwild::TetWild::split_all_edges()
             double sizing_ratio = (m_vertex_attribute[v1_id].m_sizing_scalar +
                                    m_vertex_attribute[v2_id].m_sizing_scalar) /
                                   2;
-            if (length < m_params.splitting_l2 * sizing_ratio * sizing_ratio)
-                return false;
+            if (length < m_params.splitting_l2 * sizing_ratio * sizing_ratio) return false;
             return true;
         };
         executor(*this, collect_all_ops);
