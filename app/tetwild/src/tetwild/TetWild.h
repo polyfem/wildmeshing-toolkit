@@ -26,19 +26,22 @@ namespace tetwild {
 class VertexAttributes
 {
 public:
+    // position related
     Vector3r m_pos;
     Vector3d m_posf;
     bool m_is_rounded = false;
 
+    // surface and bbox tag
     bool m_is_on_surface = false;
-    std::vector<int> on_bbox_faces;
-    bool m_is_outside = false;
+    std::vector<int> on_bbox_faces; // may lie on multiple.
 
+    // optimization procedure
     Scalar m_sizing_scalar = 1;
     bool m_is_freezed = false;
 
+    // parallel
     size_t partition_id = 0;
-
+public:
     VertexAttributes(){};
     VertexAttributes(const Vector3r& p);
     VertexAttributes(const Vector3d& p);

@@ -32,22 +32,18 @@ bool SplitEdge::before(const wmtk::TetMesh::Tuple& loc0)
 
     auto tets = m.get_incident_tets_for_edge(loc0);
     for (auto& t : tets) {
-        auto vs = m.oriented_tet_vertices(t);
+        auto vs = m.oriented_tet_vids(t);
         for (int j = 0; j < 4; j++) {
-            std::array<size_t, 3> f_vids = {{
-                vs[(j + 1) % 4].vid(m),
-                vs[(j + 2) % 4].vid(m),
-                vs[(j + 3) % 4].vid(m),
-            }}; // todo: speedup
+            std::array<size_t, 3> f_vids = {{vs[(j + 1) % 4], vs[(j + 2) % 4], vs[(j + 3) % 4]}};
             std::sort(f_vids.begin(), f_vids.end());
             auto [_, global_fid] = m.tuple_from_face(f_vids);
-            split_cache.changed_faces.push_back(
-                std::make_pair(m.m_face_attribute[global_fid], f_vids));
+            split_cache.changed_faces.emplace_back(m.m_face_attribute[global_fid], f_vids);
         }
     }
     wmtk::vector_unique(split_cache.changed_faces, comp, is_equal);
     return true;
 }
+
 bool SplitEdge::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
 {
     size_t v_id = ux;
@@ -88,9 +84,7 @@ bool SplitEdge::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
 
     /// update face attribute
     // add new and erase old
-    for (auto& info : split_cache.changed_faces) {
-        auto& f_attr = info.first;
-        auto& old_vids = info.second;
+    for (auto& [f_attr, old_vids] : split_cache.changed_faces) {
         std::vector<int> j_vn;
         for (int j = 0; j < 3; j++) {
             if (old_vids[j] != v1_id && old_vids[j] != v2_id) {
