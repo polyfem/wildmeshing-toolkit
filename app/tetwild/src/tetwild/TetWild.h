@@ -42,6 +42,7 @@ public:
 
     VertexAttributes(){};
     VertexAttributes(const Vector3r& p);
+    VertexAttributes(const Vector3d& p);
 };
 
 

@@ -1,4 +1,12 @@
 #include "AdaMesh.hpp"
+
+#include <wmtk/TetMeshOperations.hpp>
+#include "prism/geogram/AABB.hpp"
+#include "prism/geogram/AABB_tet.hpp"
+#include "prism/predicates/inside_prism_tetra.hpp"
+#include "tetwild/TetWild.h"
+#include "wmtk/ConcurrentTetMesh.h"
+
 #include <geogram/numerics/predicates.h>
 
 auto replace = [](auto& arr, size_t a, size_t b) {
@@ -14,7 +22,7 @@ auto replace = [](auto& arr, size_t a, size_t b) {
 
 
 auto degenerate_config =
-    [](const auto& tetv, const auto& tet, const Vec3d& pt) -> std::array<int, 3> {
+    [](const auto& tetv, const auto& tet, const Eigen::Vector3d& pt) -> std::array<int, 3> {
     using GEO::PCK::orient_3d;
     using GEO::PCK::points_are_colinear_3d;
     std::array<bool, 4> colinear{false, false, false, false};
@@ -44,23 +52,35 @@ auto degenerate_config =
 };
 
 
-
 namespace wmtk {
-AdaMesh::AdaMesh(const RowMatd& V, const RowMati& T)
+AdaMesh::AdaMesh(
+    tetwild::Parameters& params,
+    fastEnvelope::FastEnvelope& envelope,
+    const RowMatd& V,
+    const RowMati& T)
+    : tetwild::TetWild(params, envelope)
 {
-    m_vertex_attributes.resize(V.rows());
+    // TODO: manually set tags.
+    assert(false);
+    assert(false);
+    m_vertex_attribute.resize(V.rows());
     tet_attrs.resize(T.rows());
 
     std::vector<std::array<size_t, 4>> tets(T.rows());
     for (auto i = 0; i < tets.size(); i++) {
-        for (auto j = 0; j < 4; j++) tets[i][j] = T(i, j);
+        for (auto j = 0; j < 4; j++) tets[i][j] = (size_t)T(i, j);
     }
     init(V.rows(), tets);
 
     // attrs
     for (auto i = 0; i < V.rows(); i++) {
-        vertex_attrs[i] = VertexAttributes(Vec3d(V(i, 0), V(i, 1), V(i, 2)));
+        m_vertex_attribute[i] = tetwild::VertexAttributes(Vector3d(V(i, 0), V(i, 1), V(i, 2)));
     }
+}
+
+AdaMesh::AdaMesh(tetwild::Parameters& params,
+    fastEnvelope::FastEnvelope& envelope):
+tetwild::TetWild(params, envelope) {
 }
 
 
@@ -132,14 +152,19 @@ struct SplitFace : public TetMesh::OperationBuilder
     }
 };
 
-void AdaMesh::insert_all_points(const std::vector<Vec3d>& points, const std::vector<int>& hint_tid)
+void AdaMesh::insert_all_points(
+    const std::vector<Eigen::Vector3d>& points,
+    const std::vector<int>& hint_tid)
 {
-    std::function<int(size_t, const Vec3d&)> find_containing_tet;
+    if (hint_tid.empty()) { // find hint
+        auto tree = prism::geogram::AABB_tet(tetV, tetT);
+    }
+    std::function<int(size_t, const Vector3d&)> find_containing_tet;
     std::map<int, std::set<int>> split_maps;
     auto& m = *this;
-    find_containing_tet = [&m, &split_maps, &tetv = vertex_attrs, &find_containing_tet](
+    find_containing_tet = [&m, &split_maps, &tetv = m_vertex_attribute, &find_containing_tet](
                               size_t tid,
-                              const Vec3d& pt) -> int {
+                              const Vector3d& pt) -> int {
         auto it = split_maps.find(tid);
         if (it == split_maps.end()) { // leaf
             auto vs = m.oriented_tet_vertices(m.tuple_from_tet(tid));
@@ -166,8 +191,8 @@ void AdaMesh::insert_all_points(const std::vector<Vec3d>& points, const std::vec
         auto tid = find_containing_tet(hint_tid[i], pt); // the final tid
 
         auto config =
-            degenerate_config(vertex_attrs, m.oriented_tet_vids(m.tuple_from_tet(tid)), pt);
-        ::prism::tet::logger().trace("insert {} with config {}", i, config);
+            degenerate_config(m_vertex_attribute, m.oriented_tet_vids(m.tuple_from_tet(tid)), pt);
+        wmtk::logger().trace("insert {} with config {}", i, config);
 
         std::vector<Tuple> new_tets;
         if (config[0] != -1) {
@@ -215,6 +240,7 @@ void AdaMesh::insert_all_points(const std::vector<Vec3d>& points, const std::vec
             }
             new_vid[i] = divide_tet.ux;
         }
-        m.vertex_attrs[new_vid[i]] = AdaMesh::VertexAttributes(pt);
+        m.m_vertex_attribute[new_vid[i]] = tetwild::VertexAttributes(pt);
     }
 }
+} // namespace wmtk

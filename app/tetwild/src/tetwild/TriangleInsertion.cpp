@@ -174,9 +174,9 @@ auto internal_insert_single_triangle(
         auto vid = new_center_vids[i];
         auto& vs = center_split_tets[i];
         m_vertex_attribute[vid] = tetwild::VertexAttributes(
-            (m_vertex_attribute[vs[0]].m_pos + m_vertex_attribute[vs[1]].m_pos +
+            tetwild::Vector3r((m_vertex_attribute[vs[0]].m_pos + m_vertex_attribute[vs[1]].m_pos +
              m_vertex_attribute[vs[2]].m_pos + m_vertex_attribute[vs[3]].m_pos) /
-            4);
+            4));
     }
     assert(new_edge_vids.size() == intersected_pos.size());
 

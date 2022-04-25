@@ -25,6 +25,13 @@ tetwild::VertexAttributes::VertexAttributes(const Vector3r& p)
     m_posf = to_double(p);
 }
 
+tetwild::VertexAttributes::VertexAttributes(const Vector3d& p)
+{
+    m_posf = p;
+    m_pos = to_rational(p);
+    m_is_rounded = true;
+}
+
 void tetwild::TetWild::mesh_improvement(int max_its)
 {
     ////preprocessing

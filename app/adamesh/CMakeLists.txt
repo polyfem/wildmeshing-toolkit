@@ -1,4 +1,6 @@
 
+include(bichon)
+
 file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS
 "src/*.cpp"
 "src/*.hpp"
@@ -16,6 +18,8 @@ target_link_libraries(wmtk_adamesh PUBLIC
 	igl::predicates
 	FastEnvelope
 	wmtk::tetwild
+	prism_library
+	geogram
 )
 
 
