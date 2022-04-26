@@ -487,8 +487,13 @@ double tetwild::TetWild::get_quality(const Tuple& loc) const
 bool tetwild::TetWild::invariants(const std::vector<Tuple>& tets)
 {
     // check inversion
-    for (auto& t : tets)
-        if (is_inverted(t)) return false;
+    for (auto& t : tets) {
+        wmtk::logger().trace("conn {}", oriented_tet_vids(t));
+        if (is_inverted(t)) {
+            wmtk::logger().critical("Failing Invariant");
+            return false;
+        }
+    }
 
     return true;
 }

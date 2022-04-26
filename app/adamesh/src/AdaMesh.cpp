@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cassert>
+#include <vector>
 #include <wmtk/TetMeshOperations.hpp>
 #include "prism/geogram/AABB.hpp"
 #include "prism/geogram/AABB_tet.hpp"
@@ -69,7 +70,7 @@ struct SplitFace : public TetMesh::OperationBuilder
     {}
     std::vector<size_t> removed_tids(const TetMesh::Tuple& t)
     {
-        auto oppo = t.switch_face(m);
+        auto oppo = m.switch_tetrahedron(t).value();
         affected = {t.tid(m), oppo.tid(m)};
 
         return affected;
@@ -190,7 +191,7 @@ bool adamesh::SplitFace::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
 
     // face: 2 tet -> 6 tet, bounding faces directly inherit,
     for (auto& [old_vids, attr] : cache.f_attrs) {
-        std::vector<int> j_vn;
+        std::vector<int> j_vn; // vertex apart from  tri
         for (int j = 0; j < 3; j++) {
             if (old_vids[j] != tri_verts[0] && old_vids[j] != tri_verts[1] &&
                 old_vids[j] != tri_verts[2]) {
@@ -198,23 +199,24 @@ bool adamesh::SplitFace::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
             }
         }
 
-        if (j_vn.size() == 0) {
+        if (j_vn.size() == 0) { // tri 0-1-2 of interest, split to 3.
             for (auto j = 0; j < 3; j++) {
                 auto vids = old_vids;
                 vids[j] = ux;
                 auto [_, global_fid] = m.tuple_from_face(vids);
                 m_app.m_face_attribute[global_fid] = attr;
             }
-        } else if (j_vn.size() == 1) {
-            assert(j_vn.front() == ux);
-            for (auto j = 0; j < 3; j++) { // internal (0/1/2, 3, x)
+        } else if (j_vn.size() == 1) { // tri 0-1-T/B
+            auto [_, global_fid] = m.tuple_from_face(old_vids); // inherit boundary
+            m_app.m_face_attribute[global_fid] = attr;
+
+            for (auto j = 0; j < 3; j++) { // internal (0, x, T), duplicate appear here.
                 auto [_, global_fid] =
                     m.tuple_from_face({{ux, tri_verts[j], old_vids[j_vn.front()]}});
                 m_app.m_face_attribute[global_fid].reset();
             }
         } else { // j_vn.size() == 2
-            auto [_, global_fid] = m.tuple_from_face(old_vids);
-            m_app.m_face_attribute[global_fid] = attr;
+            assert(false);
         }
     }
 
@@ -331,17 +333,23 @@ void AdaMesh::insert_all_points(
     std::vector<int>& new_vid)
 {
     new_vid.resize(points.size());
+    auto& m = *this;
 
     auto hint_tid = aabb_tree_tid(*this, points);
 
-    std::function<int(size_t, const Vector3d&)> find_containing_tet;
-    std::map<int, std::set<int>> split_maps;
-    auto& m = *this;
-    find_containing_tet = [&m, &split_maps, &tetv = m_vertex_attribute, &find_containing_tet](
-                              size_t tid,
-                              const Vector3d& pt) -> int {
-        auto it = split_maps.find(tid);
+    using tet_ts = std::pair<size_t, size_t>;
+    std::map<tet_ts, std::vector<tet_ts>> split_maps;
+    std::vector<size_t> split_map_hash(m.tet_capacity(), 0);
+
+    std::function<int(size_t, size_t, const Vector3d&)> find_containing_tet;
+    find_containing_tet = [&m,
+                           &split_maps,
+                           &split_map_hash,
+                           &tetv = m_vertex_attribute,
+                           &find_containing_tet](size_t tid, size_t ts, const Vector3d& pt) -> int {
+        auto it = split_maps.find({tid, ts});
         if (it == split_maps.end()) { // leaf
+            assert(ts == split_map_hash[tid]); // up to date.
             auto vs = m.oriented_tet_vids(m.tuple_from_tet(tid));
             if (::prism::predicates::point_in_tetrahedron(
                     pt,
@@ -351,12 +359,29 @@ void AdaMesh::insert_all_points(
                     tetv[vs[3]].m_posf))
                 return tid;
         } else {
-            for (auto v : it->second) {
-                auto res = find_containing_tet(v, pt);
+            for (auto [tid, ts] : it->second) {
+                auto res = find_containing_tet(tid, ts, pt);
                 if (res != -1) return res;
             }
+            assert(false);
         }
         return -1;
+    };
+
+    auto record_split = [&split_map_hash, &split_maps](
+                            const std::vector<size_t>& remove,
+                            const std::vector<std::vector<size_t>>& new_list) {
+        for (auto i = 0; i < remove.size(); i++) {
+            split_map_hash[remove[i]]++;
+        } // the order of increment vs emplace is important here, similar to aliasling.
+        for (auto i = 0; i < remove.size(); i++) {
+            auto ts = split_map_hash[remove[i]] - 1; // just split
+            auto& s = split_maps[{remove[i], ts}];
+            for (auto tt : new_list[i]) {
+                if (split_map_hash.size() < tt + 1) split_map_hash.resize(tt + 1, 0);
+                s.emplace_back(tt, split_map_hash[tt]);
+            }
+        }
     };
 
     ///
@@ -369,7 +394,8 @@ void AdaMesh::insert_all_points(
     ///
     for (auto i = 0; i < points.size(); i++) {
         auto pt = points[i];
-        auto tid = find_containing_tet(hint_tid[i], pt); // the final tid
+        auto tid = find_containing_tet(hint_tid[i], 0, pt);
+        assert(tid != -1);
 
         auto config =
             degenerate_config(m_vertex_attribute, m.oriented_tet_vids(m.tuple_from_tet(tid)), pt);
@@ -384,42 +410,60 @@ void AdaMesh::insert_all_points(
                 continue;
             } else if (config[2] == -1) {
                 // edge
+                wmtk::logger().trace("Splitting Edge... {}", config);
                 auto tup = m.tuple_from_edge({(size_t)config[0], (size_t)config[1]});
                 auto spl_edge = tetwild::SplitEdge(m);
-                auto suc = m.customized_operation(spl_edge, tup, new_tets);
 
+                auto suc = m.customized_operation(spl_edge, tup, new_tets);
+                m_vertex_attribute[spl_edge.ux] = tetwild::VertexAttributes(pt);
+
+                std::vector<std::vector<size_t>> new_list;
                 for (auto j = 0; j < spl_edge.affected.size();
                      j++) { // this follows from the convention inside
-                    auto& s = split_maps[spl_edge.affected[j]];
-                    for (auto k = 0; k < 2; k++) s.insert(new_tets[j * 2 + k].tid(m));
+                    new_list.emplace_back(
+                        std::vector<size_t>{new_tets[j * 2].tid(m), new_tets[j * 2 + 1].tid(m)});
                 }
+                record_split(spl_edge.affected, new_list);
+
                 new_vid[i] = spl_edge.ux;
             } else {
                 // face
+                wmtk::logger().trace("Splitting Face... {}", config);
                 adamesh::SplitFace spl_face(m);
                 spl_face.tri_verts = {(size_t)config[0], (size_t)config[1], (size_t)config[2]};
+                spl_face.cache.pos = pt;
                 auto [tup, fid] = m.tuple_from_face(spl_face.tri_verts);
                 auto suc = m.customized_operation(spl_face, tup, new_tets);
 
                 assert(suc);
+                std::vector<std::vector<size_t>> new_list;
                 for (auto j = 0; j < 2; j++) { // this follows from the convention inside splitface
-                    auto& s = split_maps[spl_face.affected[j]];
-                    for (auto k = 0; k < 3; k++) s.insert(new_tets[j * 3 + k].tid(m));
+                    new_list.emplace_back(std::vector<size_t>{
+                        new_tets[j * 2 + 0].tid(m),
+                        new_tets[j * 2 + 1].tid(m),
+                        new_tets[j * 2 + 2].tid(m)});
                 }
+                record_split(spl_face.affected, new_list);
                 new_vid[i] = spl_face.ux;
             }
         } else {
             // general position, insert the single point
+            wmtk::logger().trace("Divide Tet... {}", config);
             adamesh::DivideTet divide_tet(m);
+            divide_tet.cache.pos = pt;
             auto tup = m.tuple_from_tet(tid);
 
             auto suc = m.customized_operation(divide_tet, tup, new_tets);
-
+            if (!suc) wmtk::logger().dump_backtrace();
             assert(suc);
-            auto& s = split_maps[tid];
-            for (auto t : new_tets) {
-                s.insert(t.tid(m));
+            {
+                std::vector<std::vector<size_t>> sub_tids(1);
+                for (const auto& t : new_tets) {
+                    sub_tids.front().push_back(t.tid(m));
+                }
+                record_split({tid}, sub_tids);
             }
+
             new_vid[i] = divide_tet.ux;
         }
         m.m_vertex_attribute[new_vid[i]] = tetwild::VertexAttributes(pt);

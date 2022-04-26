@@ -37,7 +37,7 @@ jobs:
           libboost-system-dev \
           libboost-thread-dev \
           libmpfr-dev \
-          xorg-dev \
+          libhdf5-dev \
           ccache
           echo 'CACHE_PATH=~/.ccache' >> "$GITHUB_ENV"
 
@@ -93,7 +93,7 @@ jobs:
 
       - name: Dependencies
         run: |
-          brew install ccache mpfr gmp boost
+          brew install ccache mpfr gmp boost hdf5
           echo 'CACHE_PATH=~/Library/Caches/ccache' >> "$GITHUB_ENV"
 
       - name: Cache Build
