@@ -326,9 +326,11 @@ auto aabb_tree_tid(AdaMesh& m, const std::vector<Eigen::Vector3d>& points)
     return hint_tids;
 }
 
-void AdaMesh::insert_all_points(const std::vector<Eigen::Vector3d>& points)
+void AdaMesh::insert_all_points(
+    const std::vector<Eigen::Vector3d>& points,
+    std::vector<int>& new_vid)
 {
-    std::vector<int> new_vid(points.size());
+    new_vid.resize(points.size());
 
     auto hint_tid = aabb_tree_tid(*this, points);
 

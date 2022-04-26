@@ -21,10 +21,11 @@ public:
     AdaMesh(tetwild::Parameters& params, fastEnvelope::FastEnvelope& envelope)
         : tetwild::TetWild(params, envelope, 1)
     {}
-    void insert_all_points(const std::vector<Vector3d>& points); // insert points
+    void insert_all_points(
+        const std::vector<Vector3d>& points,
+        std::vector<int>& new_vid); // insert points
     void insert_all_triangles(const std::vector<std::array<size_t, 3>>& tris);
 
 public: // callbacks
-
 };
 } // namespace wmtk

@@ -35,7 +35,7 @@ auto param_from_v_f = [](auto& vertices, auto& F) {
 };
 
 
-TEST_CASE("insertion", "[adamesh]")
+TEST_CASE("insert-exist-points", "[adamesh]")
 {
     Eigen::MatrixXd V;
     Eigen::MatrixXd F;
