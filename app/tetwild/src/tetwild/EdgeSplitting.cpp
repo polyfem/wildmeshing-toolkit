@@ -52,9 +52,9 @@ bool SplitEdge::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
     size_t v2_id = split_cache.v2_id;
 
     /// check inversion & rounding
-    m_app.m_vertex_attribute[v_id].m_posf =
-        (m_app.m_vertex_attribute[v1_id].m_posf + m_app.m_vertex_attribute[v2_id].m_posf) / 2;
-    m_app.m_vertex_attribute[v_id].m_is_rounded = true;
+    m_app.m_vertex_attribute[v_id] = tetwild::VertexAttributes(
+        (Vector3d)((m_app.m_vertex_attribute[v1_id].m_posf + m_app.m_vertex_attribute[v2_id].m_posf) /
+        2));
 
     for (auto& loc : locs) {
         if (m_app.is_inverted(loc)) {
@@ -63,11 +63,9 @@ bool SplitEdge::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
         }
     }
     if (!m_app.m_vertex_attribute[v_id].m_is_rounded) {
-        m_app.m_vertex_attribute[v_id].m_pos =
-            (m_app.m_vertex_attribute[v1_id].m_pos + m_app.m_vertex_attribute[v2_id].m_pos) / 2;
-        m_app.m_vertex_attribute[v_id].m_posf = to_double(m_app.m_vertex_attribute[v_id].m_pos);
-    } else
-        m_app.m_vertex_attribute[v_id].m_pos = to_rational(m_app.m_vertex_attribute[v_id].m_posf);
+        m_app.m_vertex_attribute[v_id] =
+            tetwild::VertexAttributes((Vector3r)((m_app.m_vertex_attribute[v1_id].m_pos + m_app.m_vertex_attribute[v2_id].m_pos) / 2));
+    }
 
     /// update quality
     for (auto& loc : locs) {
@@ -112,7 +110,6 @@ bool SplitEdge::after(const std::vector<wmtk::TetMesh::Tuple>& locs)
          m_app.m_vertex_attribute[v2_id].m_sizing_scalar) /
         2;
 
-    m_app.cnt_split++;
 
     return true;
 }
@@ -137,7 +134,7 @@ void tetwild::TetWild::split_all_edges()
             else
                 return {};
         };
-        executor.renew_neighbor_tuples = wmtk::renewal_simple;
+        executor.renew_neighbor_tuples = wmtk::renewal_edges;
 
         executor.priority = [&](auto& m, auto op, auto& t) { return m.get_length2(t); };
         executor.num_threads = NUM_THREADS;

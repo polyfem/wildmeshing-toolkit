@@ -72,13 +72,12 @@ TEST_CASE("edge_splitting", "[tetwild_operation]")
     TetWild tetwild(params, envelope);
 
     std::vector<VertexAttributes> vertices(4);
-    vertices[0].m_posf = Vector3d(0, 0, 0);
-    vertices[1].m_posf = Vector3d(1, 0, 0);
-    vertices[2].m_posf = Vector3d(0, 1, 0);
-    vertices[3].m_posf = Vector3d(0, 0, 1);
+    vertices[0] = tetwild::VertexAttributes(Vector3d(0, 0, 0));
+    vertices[1] = tetwild::VertexAttributes(Vector3d(1, 0, 0));
+    vertices[2] = tetwild::VertexAttributes(Vector3d(0, 1, 0));
+    vertices[3] = tetwild::VertexAttributes(Vector3d(0, 0, 1));
     std::vector<std::array<size_t, 4>> tets = {{{0, 1, 2, 3}}};
     std::vector<TetAttributes> tet_attrs(1);
-    for (auto& v : vertices) v.m_is_rounded = true;
 
     tetwild.init(vertices.size(), tets);
     tetwild.create_mesh_attributes(vertices, tet_attrs);
@@ -107,19 +106,15 @@ TEST_CASE("edge_collapsing", "[tetwild_operation]")
 
 
     std::vector<VertexAttributes> vertices(4);
-    vertices[0].m_posf = Vector3d(0, 0, 0);
-    vertices[1].m_posf = Vector3d(1, 0, 0);
-    vertices[2].m_posf = Vector3d(0, 1, 0);
-    vertices[3].m_posf = Vector3d(0, 0, 1);
-    std::vector<std::array<size_t, 4>> tets = {{{0, 1, 2, 3}}};
+    vertices[0] = VertexAttributes(Vector3d(0, 0, 0));
+    vertices[1] = VertexAttributes(Vector3d(1, 0, 0));
+    vertices[2] = VertexAttributes(Vector3d(0, 1, 0));
+    vertices[3] = VertexAttributes(Vector3d(0, 0, 1));
     std::vector<TetAttributes> tet_attrs(1);
-    for (auto& v : vertices) {
-        v.m_is_rounded = true;
-        v.m_pos = to_rational(v.m_posf);
-        // v.m_is_on_surface = true;
-    }
+    
     tetwild.m_collapse_check_link_condition = true;
 
+    std::vector<std::array<size_t, 4>> tets = {{{0, 1, 2, 3}}};
     tetwild.init(vertices.size(), tets);
     tetwild.create_mesh_attributes(vertices, tet_attrs);
 
@@ -193,8 +188,6 @@ TEST_CASE("optimize-bunny-tw", "[tetwild_operation][.slow]")
     std::vector<TetAttributes> tet_attrs(tets.size());
     tetwild.create_mesh_attributes(vec_attrs, tet_attrs);
 
-    // tetwild.split_all_edges();
-    // logger().info("Split {}"aa, tetwild.cnt_split);
     tetwild.collapse_all_edges();
     logger().info("Col {}", tetwild.cnt_collapse);
     tetwild.swap_all_edges();

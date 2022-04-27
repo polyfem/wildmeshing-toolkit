@@ -655,6 +655,10 @@ public:
         if (!op.after(new_tet_tuples) || !invariants(new_tet_tuples)) { // rollback post-operation
 
             logger().trace("rolling back");
+            for (auto v : new_vids) {
+                m_vertex_connectivity[v].m_is_removed = true;
+                m_vertex_connectivity[v].m_conn_tets.clear();
+            }
             operation_failure_rollback_imp(rollback_vert_conn, affected, new_tet_id, old_tets);
             return false;
         }

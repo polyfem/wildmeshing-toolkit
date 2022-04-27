@@ -34,7 +34,7 @@ void tetwild::TetWild::init_from_delaunay_box_mesh(
         delta = m_params.diag_l / 15.0;
     Vector3d box_min(m_params.min[0] - delta, m_params.min[1] - delta, m_params.min[2] - delta);
     Vector3d box_max(m_params.max[0] + delta, m_params.max[1] + delta, m_params.max[2] + delta);
-    wmtk::logger().critical("box {} -- {}", box_min.transpose(), box_max.transpose());
+    
     int Nx = std::max(2, int((box_max[0] - box_min[0]) / delta));
     int Ny = std::max(2, int((box_max[1] - box_min[1]) / delta));
     int Nz = std::max(2, int((box_max[2] - box_min[2]) / delta));
