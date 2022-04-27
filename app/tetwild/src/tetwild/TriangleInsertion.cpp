@@ -338,7 +338,6 @@ void tetwild::TetWild::init_from_input_surface(
     insert_triangles_to_mesh(faces, partition_id);
     wmtk::logger().info("finished insertion");
 
-    //// track surface, bbox, rounding
     finalize_triangle_insertion(faces);
 
     wmtk::logger().info("setup attributes #t {} #v {}", tet_capacity(), vert_capacity());
@@ -432,7 +431,7 @@ void tetwild::TetWild::finalize_triangle_insertion(const std::vector<std::array<
         wmtk::logger().info("cnt_round {}/{}", cnt_round, m_vertex_attribute.m_attributes.size());
 
         //// init qualities
-        for_each_tetra(
-            [&m = *this](auto& t) { m.m_tet_attribute[t.tid(m)].m_quality = m.get_quality(t); });
+        auto& m = *this;
+        for_each_tetra([&m](auto& t) { m.m_tet_attribute[t.tid(m)].m_quality = m.get_quality(t); });
     });
 }
