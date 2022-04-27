@@ -132,14 +132,15 @@ public:
     void output_mesh(std::string file);
     void output_faces(std::string file, std::function<bool(const FaceAttributes&)> cond);
 
-    void init_from_delaunay_box_mesh(const std::vector<Eigen::Vector3d>& vertices);
-
+    
     void finalize_triangle_insertion(const std::vector<std::array<size_t, 3>>& faces);
 
     void init_from_input_surface(
         const std::vector<Vector3d>& vertices,
         const std::vector<std::array<size_t, 3>>& faces,
         const std::vector<size_t>& partition_id);
+    void init_from_delaunay_box_mesh(const std::vector<Eigen::Vector3d>& vertices, double delta = -1.0);
+    void insert_triangles_to_mesh(const std::vector<std::array<size_t, 3>>& faces, const std::vector<size_t>& partition_id);
     bool triangle_insertion_before(const std::vector<Tuple>& faces) override;
     bool triangle_insertion_after(const std::vector<std::vector<Tuple>>& new_faces) override;
 

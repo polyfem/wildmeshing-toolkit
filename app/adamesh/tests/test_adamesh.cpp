@@ -102,8 +102,8 @@ TEST_CASE("insert-check-tag", "[adamesh]")
     mesh.init_from_input_surface(vertices, faces, partition_id);
 
     // output surface
-    mesh.output_faces("initsurf.off", [](auto& at){return at.m_is_surface_fs;});
-    mesh.output_faces("initbbox.off", [](auto& at){return at.m_is_bbox_fs >= 0;});
+    mesh.output_faces("initsurf.off", [](auto& at) { return at.m_is_surface_fs; });
+    mesh.output_faces("initbbox.off", [](auto& at) { return at.m_is_bbox_fs >= 0; });
     std::vector<int> vids;
     mesh.insert_all_points(vertices, vids);
     REQUIRE([&]() -> bool {
@@ -126,6 +126,48 @@ TEST_CASE("insert-check-tag", "[adamesh]")
             if (mesh.m_vertex_attribute[bc_vids[i]].m_posf != face_bc[i]) return false;
         return true;
     }());
-    mesh.output_faces("pointsurf.off", [](auto& at){return at.m_is_surface_fs;});
-    mesh.output_faces("pointbbox.off", [](auto& at){return at.m_is_bbox_fs >= 0;});
+    mesh.output_faces("pointsurf.off", [](auto& at) { return at.m_is_surface_fs; });
+    mesh.output_faces("pointbbox.off", [](auto& at) { return at.m_is_bbox_fs >= 0; });
+}
+
+
+TEST_CASE("offset-bunny", "[adamesh]")
+{
+    Eigen::MatrixXd V;
+    Eigen::MatrixXd F;
+    std::string input_path = WMT_DATA_DIR "/bunny.off";
+    igl::read_triangle_mesh(input_path, V, F);
+
+    std::vector<Eigen::Vector3d> vertices(V.rows());
+    for (int i = 0; i < V.rows(); i++) vertices[i] = V.row(i);
+
+    auto params = param_from_v_f(vertices, F);
+    auto envelope = envelope_from_v_f(vertices, F, params.eps);
+    wmtk::AdaMesh mesh(params, envelope);
+
+    auto faces = int_data_convert<std::array<size_t, 3>>(F);
+    wmtk::remove_duplicates(vertices, faces, params.diag_l);
+    
+    {
+        mesh.init_from_delaunay_box_mesh(vertices, 1.0);
+        // std::vector<size_t> partition_id(vertices.size(), 0); // serial
+        // mesh.insert_triangles_to_mesh(faces, partition_id);
+        // mesh.finalize_triangle_insertion(faces);
+    }
+
+    auto shifted_points = vertices;
+    for (auto& s : shifted_points) s[0] += 0.1;
+
+    std::vector<int> new_vid;
+    mesh.insert_all_points(shifted_points, new_vid);
+
+    auto mapped_faces = faces;
+    for (auto& f: mapped_faces) {
+        for (auto& v: f) v = new_vid[v];
+    }
+    std::vector<size_t> partition_id(mesh.vert_capacity(), 0); // serial
+    mesh.insert_triangles_to_mesh(mapped_faces, partition_id);
+    mesh.finalize_triangle_insertion(mapped_faces);
+    mesh.output_faces("pointsurf.off", [](auto& at) { return at.m_is_surface_fs; });
+    mesh.output_faces("pointbbox.off", [](auto& at) { return at.m_is_bbox_fs >= 0; });
 }

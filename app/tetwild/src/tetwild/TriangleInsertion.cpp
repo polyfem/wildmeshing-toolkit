@@ -20,7 +20,9 @@
 #include <unordered_set>
 
 
-void tetwild::TetWild::init_from_delaunay_box_mesh(const std::vector<Eigen::Vector3d>& vertices)
+void tetwild::TetWild::init_from_delaunay_box_mesh(
+    const std::vector<Eigen::Vector3d>& vertices,
+    double delta)
 {
     ///points for delaunay
     std::vector<wmtk::Point3D> points(vertices.size());
@@ -28,9 +30,11 @@ void tetwild::TetWild::init_from_delaunay_box_mesh(const std::vector<Eigen::Vect
         for (int j = 0; j < 3; j++) points[i][j] = vertices[i][j];
     }
     ///box
-    double delta = m_params.diag_l / 15.0;
+    if (delta < 0) // default
+        delta = m_params.diag_l / 15.0;
     Vector3d box_min(m_params.min[0] - delta, m_params.min[1] - delta, m_params.min[2] - delta);
     Vector3d box_max(m_params.max[0] + delta, m_params.max[1] + delta, m_params.max[2] + delta);
+    wmtk::logger().critical("box {} -- {}", box_min.transpose(), box_max.transpose());
     int Nx = std::max(2, int((box_max[0] - box_min[0]) / delta));
     int Ny = std::max(2, int((box_max[1] - box_min[1]) / delta));
     int Nz = std::max(2, int((box_max[2] - box_min[2]) / delta));
@@ -69,8 +73,8 @@ void tetwild::TetWild::init_from_delaunay_box_mesh(const std::vector<Eigen::Vect
     m_tet_attribute.m_attributes.resize(tets.size());
     m_face_attribute.m_attributes.resize(tets.size() * 4);
     for (int i = 0; i < m_vertex_attribute.m_attributes.size(); i++) {
-        m_vertex_attribute[i].m_pos = Vector3r(points[i][0], points[i][1], points[i][2]);
-        m_vertex_attribute[i].m_posf = Vector3d(points[i][0], points[i][1], points[i][2]);
+        m_vertex_attribute[i] =
+            tetwild::VertexAttributes(Vector3d(points[i][0], points[i][1], points[i][2]));
     }
 }
 
@@ -127,7 +131,6 @@ bool tetwild::TetWild::triangle_insertion_after(const std::vector<std::vector<Tu
 auto internal_insert_single_triangle(
     wmtk::TetMesh& m,
     tetwild::TetWild::VertAttCol& m_vertex_attribute,
-    const std::vector<Eigen::Vector3d>& vertices,
     const std::array<size_t, 3>& face,
     std::vector<std::array<size_t, 3>>& marked_tet_faces,
     const std::function<bool(const std::array<size_t, 3>&)>& try_acquire_triangle,
@@ -173,8 +176,8 @@ auto internal_insert_single_triangle(
     for (auto i = 0; i < new_center_vids.size(); i++) {
         auto vid = new_center_vids[i];
         auto& vs = center_split_tets[i];
-        m_vertex_attribute[vid] = tetwild::VertexAttributes(
-            tetwild::Vector3r((m_vertex_attribute[vs[0]].m_pos + m_vertex_attribute[vs[1]].m_pos +
+        m_vertex_attribute[vid] = tetwild::VertexAttributes(tetwild::Vector3r(
+            (m_vertex_attribute[vs[0]].m_pos + m_vertex_attribute[vs[1]].m_pos +
              m_vertex_attribute[vs[2]].m_pos + m_vertex_attribute[vs[3]].m_pos) /
             4));
     }
@@ -187,18 +190,14 @@ auto internal_insert_single_triangle(
     return true;
 }
 
-void tetwild::TetWild::init_from_input_surface(
-    const std::vector<Vector3d>& vertices,
+void tetwild::TetWild::insert_triangles_to_mesh(
     const std::vector<std::array<size_t, 3>>& faces,
     const std::vector<size_t>& partition_id)
 {
-    init_from_delaunay_box_mesh(vertices);
-
     // match faces preserved in delaunay
     tbb::concurrent_vector<bool> is_matched;
     wmtk::match_tet_faces_to_triangles(*this, faces, is_matched, tet_face_tags);
     wmtk::logger().info("is_matched: {}", std::count(is_matched.begin(), is_matched.end(), true));
-
     std::vector<tbb::concurrent_priority_queue<std::tuple<double, int, size_t>>> insertion_queues(
         NUM_THREADS);
     tbb::concurrent_priority_queue<std::tuple<double, int, size_t>> expired_queue;
@@ -219,13 +218,7 @@ void tetwild::TetWild::init_from_input_surface(
 
     arena.execute([&, &m = *this, &tet_face_tags = this->tet_face_tags]() {
         for (int task_id = 0; task_id < m.NUM_THREADS; task_id++) {
-            tg.run([&insertion_queues,
-                    &expired_queue,
-                    &tet_face_tags,
-                    &m,
-                    &vertices,
-                    &faces,
-                    task_id] {
+            tg.run([&insertion_queues, &expired_queue, &tet_face_tags, &m, &faces, task_id] {
                 auto try_acquire_tetra = [&m, task_id](const auto& intersected_tets) {
                     for (auto t_int : intersected_tets) {
                         for (auto v_int : m.oriented_tet_vertices(t_int)) {
@@ -287,7 +280,6 @@ void tetwild::TetWild::init_from_input_surface(
                     auto success = internal_insert_single_triangle(
                         m,
                         m.m_vertex_attribute,
-                        vertices,
                         faces[face_id],
                         marked_tet_faces,
                         try_acquire_triangle,
@@ -325,7 +317,6 @@ void tetwild::TetWild::init_from_input_surface(
         auto success = internal_insert_single_triangle(
             *this,
             m_vertex_attribute,
-            vertices,
             faces[face_id],
             marked_tet_faces,
             check_acquire,
@@ -335,17 +326,25 @@ void tetwild::TetWild::init_from_input_surface(
         for (auto& f : marked_tet_faces) tet_face_tags[f].push_back(face_id);
         return true;
     });
+}
 
-    //// track surface, bbox, rounding
+void tetwild::TetWild::init_from_input_surface(
+    const std::vector<Vector3d>& vertices,
+    const std::vector<std::array<size_t, 3>>& faces,
+    const std::vector<size_t>& partition_id)
+{
+    init_from_delaunay_box_mesh(vertices, m_params.diag_l / 15.0);
+
+    insert_triangles_to_mesh(faces, partition_id);
     wmtk::logger().info("finished insertion");
 
+    //// track surface, bbox, rounding
     finalize_triangle_insertion(faces);
 
     wmtk::logger().info("setup attributes #t {} #v {}", tet_capacity(), vert_capacity());
 } // note: skip preserve open boundaries
 
-void tetwild::TetWild::finalize_triangle_insertion(
-    const std::vector<std::array<size_t, 3>>& faces)
+void tetwild::TetWild::finalize_triangle_insertion(const std::vector<std::array<size_t, 3>>& faces)
 {
     tbb::task_arena arena(NUM_THREADS);
 
@@ -388,12 +387,13 @@ void tetwild::TetWild::finalize_triangle_insertion(
                 }
             }
         });
+        tet_face_tags.clear();
 
         //// track bbox
         auto faces = get_faces();
 
-        for (int i = 0; i < faces.size(); i++) {
-            auto vs = get_face_vertices(faces[i]);
+        for (auto f : faces) {
+            auto vs = get_face_vertices(f);
             std::array<size_t, 3> vids = {{vs[0].vid(*this), vs[1].vid(*this), vs[2].vid(*this)}};
             int on_bbox = -1;
             for (int k = 0; k < 3; k++) {
@@ -411,7 +411,7 @@ void tetwild::TetWild::finalize_triangle_insertion(
                 }
             }
             if (on_bbox < 0) continue;
-            auto fid = faces[i].fid(*this);
+            auto fid = f.fid(*this);
             m_face_attribute[fid].m_is_bbox_fs = on_bbox;
             //
             for (size_t vid : vids) {
@@ -423,13 +423,11 @@ void tetwild::TetWild::finalize_triangle_insertion(
             [&](auto& v) { wmtk::vector_unique(m_vertex_attribute[v.vid(*this)].on_bbox_faces); });
 
         //// rounding
-        std::atomic_int cnt_round(0);
+        int cnt_round(0);
 
-        for (int i = 0; i < m_vertex_attribute.m_attributes.size(); i++) {
-            auto v = tuple_from_vertex(i);
+        TetMesh::for_each_vertex([&](auto& v) {
             if (round(v)) cnt_round++;
-        }
-
+        }); // serial for_each
 
         wmtk::logger().info("cnt_round {}/{}", cnt_round, m_vertex_attribute.m_attributes.size());
 
