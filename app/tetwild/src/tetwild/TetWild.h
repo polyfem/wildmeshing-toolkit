@@ -376,7 +376,7 @@ public:
     // debug use
     std::atomic<int> cnt_split = 0, cnt_collapse = 0, cnt_swap = 0;
 
-private:
+protected:
     // tags: correspondence map from new tet-face node indices to in-triangle ids.
     // built up while triangles are inserted.
     tbb::concurrent_map<std::array<size_t, 3>, std::vector<int>> tet_face_tags;

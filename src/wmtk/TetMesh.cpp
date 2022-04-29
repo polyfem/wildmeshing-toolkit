@@ -408,6 +408,7 @@ std::array<wmtk::TetMesh::Tuple, 6> wmtk::TetMesh::tet_edges(const Tuple& t) con
 
         es[j].m_global_vid = m_tet_connectivity[t.m_global_tid][m_local_edges[j][0]];
         es[j].m_global_tid = t.m_global_tid;
+        es[j].m_hash = t.m_hash;
     }
     return es;
 }

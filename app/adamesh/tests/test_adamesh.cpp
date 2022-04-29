@@ -147,27 +147,33 @@ TEST_CASE("offset-bunny", "[adamesh]")
 
     auto faces = int_data_convert<std::array<size_t, 3>>(F);
     wmtk::remove_duplicates(vertices, faces, params.diag_l);
-    
+
     {
-        mesh.init_from_delaunay_box_mesh(vertices, 1.0);
+        mesh.init_from_delaunay_box_mesh(vertices, 0.1);
         // std::vector<size_t> partition_id(vertices.size(), 0); // serial
         // mesh.insert_triangles_to_mesh(faces, partition_id);
         // mesh.finalize_triangle_insertion(faces);
     }
 
     auto shifted_points = vertices;
-    for (auto& s : shifted_points) s[0] += 0.1;
+    for (auto& s : shifted_points) s[0] += 0.05;
 
     std::vector<int> new_vid;
     mesh.insert_all_points(shifted_points, new_vid);
 
     auto mapped_faces = faces;
-    for (auto& f: mapped_faces) {
-        for (auto& v: f) v = new_vid[v];
+    for (auto& f : mapped_faces) {
+        for (auto& v : f) {
+            assert(v < new_vid.size());
+            v = new_vid[v];
+        }
     }
+
     std::vector<size_t> partition_id(mesh.vert_capacity(), 0); // serial
+    mapped_faces.resize(2000);
     mesh.insert_triangles_to_mesh(mapped_faces, partition_id);
     mesh.finalize_triangle_insertion(mapped_faces);
+    mesh.output_mesh("point.msh");
     mesh.output_faces("pointsurf.off", [](auto& at) { return at.m_is_surface_fs; });
     mesh.output_faces("pointbbox.off", [](auto& at) { return at.m_is_bbox_fs >= 0; });
 }
