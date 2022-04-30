@@ -10,14 +10,11 @@
 // clang-format off
 #include <wmtk/utils/DisableWarnings.hpp>
 #include <fastenvelope/FastEnvelope.h>
-#include <tbb/concurrent_queue.h>
 #include <tbb/concurrent_priority_queue.h>
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_map.h>
-#include <tbb/concurrent_unordered_map.h>
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
-#include <tbb/task_arena.h>
 #include <tbb/parallel_sort.h>
 #include <wmtk/utils/EnableWarnings.hpp>
 // clang-format on
@@ -313,7 +310,7 @@ public:
     void output_mesh(std::string file);
     void output_faces(std::string file, std::function<bool(const FaceAttributes&)> cond);
 
-    void finalize_triangle_insertion(const std::vector<std::array<size_t, 3>>& faces);
+    void finalize_triangle_insertion(const std::vector<Vector3d>& vertices, const std::vector<std::array<size_t, 3>>& faces);
 
     void init_from_input_surface(
         const std::vector<Vector3d>& vertices,

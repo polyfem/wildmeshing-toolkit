@@ -150,29 +150,18 @@ TEST_CASE("offset-bunny", "[adamesh]")
 
     {
         mesh.init_from_delaunay_box_mesh(vertices, 0.1);
-        // std::vector<size_t> partition_id(vertices.size(), 0); // serial
-        // mesh.insert_triangles_to_mesh(faces, partition_id);
-        // mesh.finalize_triangle_insertion(faces);
+        mesh.insert_triangles_to_mesh(vertices, faces);
+        mesh.mesh_improvement(5);
     }
+    mesh.output_faces("improvedsurf.off", [](auto& at) { return at.m_is_surface_fs; });
 
     auto shifted_points = vertices;
     for (auto& s : shifted_points) s[0] += 0.05;
 
-    std::vector<int> new_vid;
-    mesh.insert_all_points(shifted_points, new_vid);
-
     auto mapped_faces = faces;
-    for (auto& f : mapped_faces) {
-        for (auto& v : f) {
-            assert(v < new_vid.size());
-            v = new_vid[v];
-        }
-    }
 
-    std::vector<size_t> partition_id(mesh.vert_capacity(), 0); // serial
     mapped_faces.resize(2000);
-    mesh.insert_triangles_to_mesh(mapped_faces, partition_id);
-    mesh.finalize_triangle_insertion(mapped_faces);
+    mesh.insert_triangles_to_mesh(shifted_points, mapped_faces);
     mesh.output_mesh("point.msh");
     mesh.output_faces("pointsurf.off", [](auto& at) { return at.m_is_surface_fs; });
     mesh.output_faces("pointbbox.off", [](auto& at) { return at.m_is_bbox_fs >= 0; });

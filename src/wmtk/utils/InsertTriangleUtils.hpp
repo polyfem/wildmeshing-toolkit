@@ -427,7 +427,10 @@ auto triangle_insert_prepare_info_non_point(
 
     bool success_flag = false;
 
-    std::array<Vector3r, 3> tri = {tri_verts[0], tri_verts[1], tri_verts[2]};
+    std::array<Vector3r, 3> tri;
+    for (auto i = 0; i < 3; i++)
+        for (auto j = 0; j < 3; j++) tri[i][j] = rational(tri_verts[i][j]);
+
     Vector3r tri_normal = (tri[1] - tri[0]).cross(tri[2] - tri[0]);
     //
     std::array<Vector2r, 3> tri2;

@@ -25,8 +25,10 @@ public:
         const std::vector<Vector3d>& points,
         std::vector<int>& new_vid); // insert points
 
-    void insert_triangles_to_mesh(const std::vector<std::array<size_t, 3>>& faces);
+    void insert_triangles_to_mesh(const std::vector<Eigen::Vector3d>& vertices, const std::vector<std::array<size_t, 3>>& faces);
 
-public: // callbacks
+public:
+    void serialize(std::string filename);
+    void deserialize(std::string filename);
 };
 } // namespace wmtk
