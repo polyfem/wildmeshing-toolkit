@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <iterator>
 #include <vector>
+#include "wmtk/utils/Logger.hpp"
 
 auto replace(std::array<size_t, 4>& arr, size_t v0, size_t v1)
 {
@@ -306,6 +307,10 @@ bool wmtk::TetMesh::swap_edge_44(const Tuple& t, std::vector<Tuple>& new_tet_tup
         auto edge_vv = std::array<size_t, 2>();
         auto new_tets = swap_4_4(old_tets_conn, v1_id, v2_id, type, edge_vv);
 
+        auto existing_vv = set_intersection(
+            m_vertex_connectivity[edge_vv[0]].m_conn_tets,
+            m_vertex_connectivity[edge_vv[1]].m_conn_tets);
+        if (!existing_vv.empty()) continue;
         new_tet_id = affected;
         auto rollback_vert_conn = operation_update_connectivity_impl(new_tet_id, new_tets);
         assert(new_tet_id.size() == 4);
@@ -324,6 +329,7 @@ bool wmtk::TetMesh::swap_edge_44(const Tuple& t, std::vector<Tuple>& new_tet_tup
         auto newt = new_tuple_from_edge();
 
         for (auto ti : new_tet_id) new_tet_tuples.emplace_back(tuple_from_tet(ti));
+
         start_protect_attributes();
         if (!swap_edge_44_after(newt) || !invariants(new_tet_tuples)) { // rollback post-operation
             assert(affected.size() == old_tets.size());
