@@ -394,7 +394,7 @@ void tetwild::TetWild::finalize_triangle_insertion(
         auto vs = get_face_vertices(f);
         std::array<size_t, 3> vids = {{vs[0].vid(*this), vs[1].vid(*this), vs[2].vid(*this)}};
         int on_bbox = -1;
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < 3; k++) { // x,y,z
             if (m_vertex_attribute[vids[0]].m_pos[k] == m_params.box_min[k] &&
                 m_vertex_attribute[vids[1]].m_pos[k] == m_params.box_min[k] &&
                 m_vertex_attribute[vids[2]].m_pos[k] == m_params.box_min[k]) {

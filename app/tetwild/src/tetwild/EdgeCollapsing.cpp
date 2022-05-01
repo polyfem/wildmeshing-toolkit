@@ -254,13 +254,10 @@ bool tetwild::TetWild::collapse_edge_after(const Tuple& loc)
                   m_vertex_attribute[vids[1]].m_posf,
                   m_vertex_attribute[vids[2]].m_posf}});
             if (is_out) {
-                //                cout<<"Env"<<endl;
                 return false;
             }
         }
     }
-    //    if(m_vertex_attribute[v1_id].m_is_on_surface)
-    //        std::cout<<"suc"<<std::endl;
 
     //// update attrs
     // tet attr
@@ -269,6 +266,7 @@ bool tetwild::TetWild::collapse_edge_after(const Tuple& loc)
     }
     // vertex attr
     round(loc);
+
     m_vertex_attribute[v2_id].m_is_on_surface =
         m_vertex_attribute[v1_id].m_is_on_surface || m_vertex_attribute[v2_id].m_is_on_surface;
     // no need to update on_bbox_faces

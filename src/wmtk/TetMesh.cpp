@@ -99,7 +99,7 @@ void wmtk::TetMesh::for_each_face(const std::function<void(const TetMesh::Tuple&
         if (!tuple_from_tet(i).is_valid(*this)) continue;
         for (int j = 0; j < 4; j++) {
             auto tup = tuple_from_face(i, j);
-            if (tup.eid(*this) == 4 * i + j) {
+            if (tup.fid(*this) == 4 * i + j) {
                 func(tup);
             }
         }
@@ -298,25 +298,23 @@ std::tuple<wmtk::TetMesh::Tuple, size_t> wmtk::TetMesh::tuple_from_face(
     assert(n12_t_ids.size() == 1 || n12_t_ids.size() == 2);
 
     // tid
-    Tuple face;
-    face.m_global_tid = n12_t_ids[0];
-    if (n12_t_ids.size() > 1 && n12_t_ids[1] < n12_t_ids[0]) face.m_global_tid = n12_t_ids[1];
+    auto tid = *std::min_element(n12_t_ids.begin(), n12_t_ids.end());
+    auto face = tuple_from_tet(tid);
+    
     // fid
     std::array<int, 3> f;
     for (int j = 0; j < 3; j++) {
-        f[j] = m_tet_connectivity[face.m_global_tid].find(vids[j]);
+        f[j] = m_tet_connectivity[tid].find(vids[j]);
     }
     std::sort(f.begin(), f.end());
-    face.m_local_fid =
+    face.m_local_fid = 
         std::find(m_local_faces.begin(), m_local_faces.end(), f) - m_local_faces.begin();
     // eid
     face.m_local_eid = m_local_edges_in_a_face[face.m_local_fid][0];
     // vid
-    face.m_global_vid = m_tet_connectivity[face.m_global_tid][m_local_edges[face.m_local_eid][0]];
+    face.m_global_vid = m_tet_connectivity[tid][m_local_edges[face.m_local_eid][0]];
 
-    size_t global_fid = face.m_global_tid * 4 + face.m_local_fid;
-
-    face.m_hash = m_tet_connectivity[face.m_global_tid].hash;
+    size_t global_fid = tid * 4 + face.m_local_fid;
 
     assert(face.is_valid(*this));
     assert(face.fid(*this) == global_fid);
