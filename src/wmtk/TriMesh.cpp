@@ -816,7 +816,7 @@ bool wmtk::TriMesh::check_link_condition(const Tuple& edge) const
     auto vid2_ring = get_one_ring_edges_for_vertex(switch_vertex(edge));
 
 
-    size_t dummy = std::numeric_limits<size_t>::max();
+    size_t dummy = -1;
 
     std::vector<size_t> lk_vid1;
     std::vector<size_t> lk_vid2;

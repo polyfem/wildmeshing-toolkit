@@ -35,10 +35,10 @@ public:
     // Cell Tuple Navigator
     class Tuple
     {
-        size_t m_global_vid = std::numeric_limits<size_t>::max();
-        size_t m_local_eid = std::numeric_limits<size_t>::max();
-        size_t m_local_fid = std::numeric_limits<size_t>::max();
-        size_t m_global_tid = std::numeric_limits<size_t>::max();
+        size_t m_global_vid = -1;
+        size_t m_local_eid = -1;
+        size_t m_local_fid = -1;
+        size_t m_global_tid = -1;
 
         int m_hash = 0;
 
@@ -292,6 +292,7 @@ public:
      * not exceed `n_vertices`
      */
     void init(size_t n_vertices, const std::vector<std::array<size_t, 4>>& tets);
+    void init_internal(size_t n_vertices, const std::vector<std::array<size_t, 4>>& tets);
 
     /**
      * Split an edge
@@ -569,6 +570,7 @@ public:
         }
     }
     bool m_collapse_check_link_condition = true;
+    bool m_collapse_invariants = true;
 
 private:
     std::map<size_t, wmtk::TetMesh::VertexConnectivity> operation_update_connectivity_impl(

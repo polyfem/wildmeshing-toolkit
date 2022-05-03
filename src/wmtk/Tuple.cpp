@@ -60,7 +60,7 @@ bool TetMesh::Tuple::is_boundary_edge(const TetMesh& m) const
 
 bool TetMesh::Tuple::is_valid(const TetMesh& m) const
 {
-    
+    if (m_global_tid + 1 == 0) return false; // empty -1 tuple.
     if (m.m_vertex_connectivity[m_global_vid].m_is_removed ||
         m.m_tet_connectivity[m_global_tid].m_is_removed)
         return false;
@@ -76,16 +76,6 @@ void TetMesh::Tuple::print_info() const
 
 void TetMesh::Tuple::print_info(const TetMesh& m) const
 {
-    //    logger().trace("tuple: {} {} {} {}", m_global_vid, m_local_eid, m_local_fid,
-    //    m_global_tid); logger().trace("tet {} {} {} {}", m.m_tet_connectivity[m_global_tid][0],
-    //    m.m_tet_connectivity[m_global_tid][1],
-    //                   m.m_tet_connectivity[m_global_tid][2],
-    //                   m.m_tet_connectivity[m_global_tid][3]);
-    //    logger().trace("edge {}: {} {}", m_local_eid, m_local_edges[m_local_eid][0],
-    //    m_local_edges[m_local_eid][1]); logger().trace("face {}: {} {} {}", m_local_eid,
-    //    m_local_faces[m_local_fid][0], m_local_faces[m_local_fid][1],
-    //                   m_local_faces[m_local_fid][2]);
-
     logger().trace("tuple: {} {} {} {}", m_global_vid, m_local_eid, m_local_fid, m_global_tid);
     logger().trace(
         "tet {} {} {} {}",
@@ -131,7 +121,7 @@ size_t TetMesh::Tuple::eid(const TetMesh& m) const
         if (tmp_v1_id == v1_id && tmp_v2_id == v2_id)
             return tid * 6 + j;
     }
-    return std::numeric_limits<size_t>::max();
+    return -1;
 }
 
 size_t TetMesh::Tuple::fid(const TetMesh& m) const

@@ -68,7 +68,7 @@ struct ExecutePass
     std::function<bool(const AppMesh&)> stopping_criterion = [](const AppMesh&) {
         return false; // non-stop, process everything
     };
-    size_t stopping_criterion_checking_frequency = std::numeric_limits<size_t>::max();
+    size_t stopping_criterion_checking_frequency = -1;
 
     // Should Process drops some Tuple from being processed.
     // For example, if the energy is out-dated.

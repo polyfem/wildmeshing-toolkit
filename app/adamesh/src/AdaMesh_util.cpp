@@ -19,11 +19,11 @@ void wmtk::AdaMesh::serialize(std::string filename)
 
 
     // tags, Face, is_surface_fs, is_bbox_fs
-    
-    Eigen::MatrixXi FaceTag = -Eigen::MatrixXi::Ones(tet_capacity()*6, 2);
-    for (auto i=0; i<m_face_attribute.size(); i++) {
-      auto& att = m_face_attribute[i];
-      FaceTag.row(i) << att.m_is_surface_fs, att.m_is_bbox_fs ;
+
+    Eigen::MatrixXi FaceTag = -Eigen::MatrixXi::Ones(tet_capacity() * 4, 2);
+    for (auto i = 0; i < m_face_attribute.size(); i++) {
+        auto& att = m_face_attribute[i];
+        FaceTag.row(i) << att.m_is_surface_fs, att.m_is_bbox_fs;
     }
 }
 
@@ -36,8 +36,11 @@ void wmtk::AdaMesh::deserialize(std::string filename)
     Eigen::MatrixXi FaceTag;
 
     std::vector<std::array<size_t, 4>> tets(T.rows());
-    for (auto i=0 ;i<T.rows(); i++) {
-      tets.
+    for (auto i = 0; i < T.rows(); i++) {
+        if (T(i, 0) < 0)
+            tets[i] = {0};
+        else
+            tets[i] = {(size_t)T(i, 0), (size_t)T(i, 1), (size_t)T(i, 2), (size_t)T(i, 3)};
     }
     init(V.rows(), tets);
 
@@ -55,7 +58,7 @@ void wmtk::AdaMesh::deserialize(std::string filename)
 
 
     // tags, Face, is_surface_fs, is_bbox_fs
-    
+
     // for (auto i=0; i<m_face_attribute.size(); i++) {
     //   auto& att = m_face_attribute[i];
     //   FaceTag.row(i) << att.m_is_surface_fs, att.m_is_bbox_fs ;

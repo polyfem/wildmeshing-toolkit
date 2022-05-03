@@ -52,7 +52,7 @@ bool wmtk::TetMesh::collapse_edge(const Tuple& loc0, std::vector<Tuple>& new_edg
             for (auto& t : tets) {
                 collect(conn[t]);
             }
-            const auto dummy = std::numeric_limits<size_t>::max();
+            const size_t dummy = -1;
             logger().trace("in face {}", faces);
             for (auto& f : faces) {
                 auto tet = std::array<size_t, 4>{{f[0], f[1], f[2], dummy}};
