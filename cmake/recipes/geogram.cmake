@@ -1,5 +1,5 @@
-# Geogram
-# License: (BSD)
+# Geogram (https://github.com/polyfem/geogram)
+# License: BSD
 
 if(TARGET geogram)
     return()
@@ -41,7 +41,7 @@ include(FetchContent)
 FetchContent_Declare(
     polyfem_geogram
 	GIT_REPOSITORY https://github.com/polyfem/geogram.git
-	GIT_TAG        516c151c244d9019a9076a1a468d52a0f6dd195d
+	GIT_TAG        c790c30daf05839fb4d64b83f2e1fababdf17622
     GIT_SHALLOW FALSE
 )
 FetchContent_MakeAvailable(polyfem_geogram)
