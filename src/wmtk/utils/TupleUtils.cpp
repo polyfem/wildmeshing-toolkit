@@ -1,27 +1,23 @@
 #include <wmtk/utils/TupleUtils.hpp>
 
-#include <Tracy.hpp>
-
 #include <algorithm>
 #include "wmtk/TriMesh.h"
 
 namespace wmtk {
 void unique_edge_tuples(const TetMesh& m, std::vector<TetMesh::Tuple>& edges)
 {
-    
     auto edge_ids = std::vector<size_t>();
     for (auto& e : edges) edge_ids.push_back(e.eid(m));
     std::sort(edge_ids.begin(), edge_ids.end());
     edge_ids.erase(std::unique(edge_ids.begin(), edge_ids.end()), edge_ids.end());
     edges.clear();
-    for (auto i:edge_ids) {
-        edges.emplace_back(m.tuple_from_edge(i/6, i%6));
+    for (auto i : edge_ids) {
+        edges.emplace_back(m.tuple_from_edge(i / 6, i % 6));
     }
 }
 
 void unique_edge_tuples(const TriMesh& m, std::vector<TriMesh::Tuple>& edges)
 {
-    
     std::vector<size_t> all_eids;
     for (auto e : edges) {
         all_eids.emplace_back(e.eid(m));
@@ -35,7 +31,6 @@ void unique_edge_tuples(const TriMesh& m, std::vector<TriMesh::Tuple>& edges)
 
 void unique_face_tuples(const TetMesh& m, std::vector<TetMesh::Tuple>& faces)
 {
-    
     std::stable_sort(
         faces.begin(),
         faces.end(),
@@ -53,7 +48,6 @@ void unique_face_tuples(const TetMesh& m, std::vector<TetMesh::Tuple>& faces)
 
 void unique_directed_edge_tuples(const TetMesh& m, std::vector<TetMesh::Tuple>& edges)
 {
-    
     std::stable_sort(
         edges.begin(),
         edges.end(),

@@ -16,7 +16,6 @@ add_library(wmtk::triwild ALIAS wmtk_triwild)
 target_include_directories(wmtk_triwild PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
 
 target_link_libraries(wmtk_triwild PUBLIC
-	Tracy::TracyClient
 	wmtk::toolkit
 	wmtk::data
 	wmtk::sec_lib

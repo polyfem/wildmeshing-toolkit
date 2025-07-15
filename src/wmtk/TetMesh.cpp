@@ -1,12 +1,11 @@
 #include <wmtk/TetMesh.h>
 
 #include <wmtk/AttributeCollection.hpp>
-#include <wmtk/utils/TupleUtils.hpp>
 #include <wmtk/utils/EnableWarnings.hpp>
+#include <wmtk/utils/TupleUtils.hpp>
 
 #include <tbb/parallel_for.h>
 
-#include <Tracy.hpp>
 
 int wmtk::TetMesh::get_next_empty_slot_t()
 {
@@ -137,7 +136,6 @@ void wmtk::TetMesh::for_each_face(const std::function<void(const TetMesh::Tuple&
         }
     }
 }
-
 
 
 std::vector<wmtk::TetMesh::Tuple> wmtk::TetMesh::get_faces() const
@@ -697,8 +695,7 @@ bool wmtk::TetMesh::try_set_vertex_mutex_two_ring_vid(const Tuple& v, int thread
             {
                 stack.push_back(v_one_ring);
             }
-            for (auto v_two_ring :
-                 get_one_ring_vids_for_vertex(v_one_ring, cache)) {
+            for (auto v_two_ring : get_one_ring_vids_for_vertex(v_one_ring, cache)) {
                 if (m_vertex_mutex[v_two_ring].get_owner() == threadid) continue;
                 if (try_set_vertex_mutex(v_two_ring, threadid)) {
                     stack.push_back(v_two_ring);
@@ -716,13 +713,12 @@ bool wmtk::TetMesh::try_set_vertex_mutex_two_ring_vid(const Tuple& v, int thread
 bool wmtk::TetMesh::try_set_vertex_mutex_two_ring_vid(size_t v, int threadid)
 {
     auto& cache = get_one_ring_cache.local();
-    auto& stack =  mutex_release_stack.local();
+    auto& stack = mutex_release_stack.local();
     for (auto v_one_ring : get_one_ring_vids_for_vertex(v, cache)) {
         if (m_vertex_mutex[v_one_ring].get_owner() == threadid) continue;
         if (try_set_vertex_mutex(v_one_ring, threadid)) {
             stack.push_back(v_one_ring);
-            for (auto v_two_ring :
-                 get_one_ring_vids_for_vertex(v_one_ring, cache)) {
+            for (auto v_two_ring : get_one_ring_vids_for_vertex(v_one_ring, cache)) {
                 if (m_vertex_mutex[v_two_ring].get_owner() == threadid) continue;
                 if (try_set_vertex_mutex(v_two_ring, threadid)) {
                     stack.push_back(v_two_ring);
@@ -951,11 +947,7 @@ bool wmtk::TetMesh::try_set_face_mutex_two_ring(
     return true;
 }
 
-bool wmtk::TetMesh::try_set_face_mutex_two_ring(
-    size_t v1,
-    size_t v2,
-    size_t v3,
-    int threadid)
+bool wmtk::TetMesh::try_set_face_mutex_two_ring(size_t v1, size_t v2, size_t v3, int threadid)
 {
     bool release_flag = false;
     auto& stack = mutex_release_stack.local();
@@ -995,8 +987,7 @@ bool wmtk::TetMesh::try_set_vertex_mutex_one_ring(const Tuple& v, int threadid)
     if (m_vertex_mutex[v.vid(*this)].get_owner() != threadid) {
         if (try_set_vertex_mutex(v, threadid)) {
             stack.push_back(v.vid(*this));
-            for (auto v_one_ring :
-                 get_one_ring_vids_for_vertex(v.vid(*this), cache)) {
+            for (auto v_one_ring : get_one_ring_vids_for_vertex(v.vid(*this), cache)) {
                 if (m_vertex_mutex[v_one_ring].get_owner() != threadid) {
                     if (try_set_vertex_mutex(v_one_ring, threadid)) {
                         stack.push_back(v_one_ring);
@@ -1052,8 +1043,7 @@ void wmtk::TetMesh::for_each_tetra(const std::function<void(const TetMesh::Tuple
 }
 
 
-void wmtk::TetMesh::for_each_vertex(
-    const std::function<void(const TetMesh::Tuple&)>& func)
+void wmtk::TetMesh::for_each_vertex(const std::function<void(const TetMesh::Tuple&)>& func)
 {
     tbb::task_arena arena(NUM_THREADS);
     arena.execute([&] {

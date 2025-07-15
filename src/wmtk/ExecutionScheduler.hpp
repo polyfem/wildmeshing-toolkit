@@ -18,7 +18,6 @@
 #include <wmtk/utils/EnableWarnings.hpp>
 // clang-format on
 
-#include <Tracy.hpp>
 
 #include <atomic>
 #include <cassert>

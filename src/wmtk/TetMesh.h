@@ -9,8 +9,6 @@
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/spin_mutex.h>
 
-#include <Tracy.hpp>
-
 #include <array>
 #include <cassert>
 #include <limits>
