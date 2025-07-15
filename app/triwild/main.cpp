@@ -8,8 +8,6 @@
 
 int main(int argc, char** argv)
 {
-    ZoneScopedN("triwildmain");
-
     // Parsing of parameters
     triwild::Parameters params;
 
@@ -32,7 +30,7 @@ int main(int argc, char** argv)
 
     // Load the mesh in the trimesh class
     triwild::TriWild triwild;
-    triwild.create_mesh(V,F);
+    triwild.create_mesh(V, F);
     assert(triwild.check_mesh_connectivity_validity());
 
     // Do the mesh optimization

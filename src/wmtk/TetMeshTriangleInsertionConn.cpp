@@ -109,7 +109,7 @@ void wmtk::TetMesh::triangle_insertion(
         new_face_vids,
         new_vids,
         new_tids,
-        new_center_vids, 
+        new_center_vids,
         center_split_tets);
 
     /// track surface after
@@ -394,7 +394,6 @@ void wmtk::TetMesh::subdivide_a_tet(
 
 bool wmtk::TetMesh::insert_point(const Tuple& t, std::vector<Tuple>& new_tets)
 {
-    ZoneScoped;
     if (!insert_point_before(t)) return false;
     start_protect_attributes();
     if (!insert_point_after(new_tets) || !invariants(new_tets)) {

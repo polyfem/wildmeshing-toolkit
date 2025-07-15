@@ -36,8 +36,6 @@ void tetwild::TetWild::mesh_improvement(int max_its)
     ////preprocessing
     // TODO: refactor to eliminate repeated partition.
     //
-    ZoneScopedN("meshimprovementmain");
-
     compute_vertex_partition_morton();
 
     wmtk::logger().info("========it pre========");

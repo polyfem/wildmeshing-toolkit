@@ -110,7 +110,6 @@ size_t TetMesh::Tuple::vid(const TetMesh&) const
 
 size_t TetMesh::Tuple::eid(const TetMesh& m) const
 {
-    ZoneScoped;
     auto v1_id = m.m_tet_connectivity[m_global_tid][m_local_edges[m_local_eid][0]];
     auto v2_id = m.m_tet_connectivity[m_global_tid][m_local_edges[m_local_eid][1]];
     if (v1_id > v2_id) std::swap(v1_id, v2_id);

@@ -304,7 +304,6 @@ public:
                     }
                     cnt_update.store(0, std::memory_order_release);
                 }
-                FrameMark;
             }
         };
 
